@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from dotenv import load_dotenv
 
@@ -33,6 +34,27 @@ def get_contacts(companies):
         )
 
         print(company["name"], response.status_code)
+
+        # Handle rate limit
+        if response.status_code == 429:
+            print("Rate limit hit. Waiting 15 seconds...")
+            time.sleep(15)
+
+            response = requests.post(
+                "https://api.prospeo.io/search-person",
+                headers={
+                    "X-KEY": API_KEY,
+                    "Content-Type": "application/json"
+                },
+                json=payload
+            )
+
+            print("Retry:", response.status_code)
+
+        # Skip if still failing
+        if response.status_code != 200:
+            print("Error:", response.text)
+            continue
 
         data = response.json()
 
